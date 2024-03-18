@@ -44,15 +44,13 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
         LastNumPublicConnections = NumPublicConnections;
         LastMatchType = MatchType;
         DestroySession();
-
-        // SessionInterface->DestroySession(NAME_GameSession);
     }
 
+    //
+    // SESSION SETUP
+    //
+
     LastSessionSettings = MakeShareable(new FOnlineSessionSettings());//create a new session settings object
-
-    CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);//store the delegate in an FDelegateHandle so we can later remove it from the delegate list
-
-    const ULocalPlayer * LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();//get the first local player
 
 	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false; // if we are using the steam subsystem it is not a lan match, but if we are using the null subsystem it is a lan match
 	LastSessionSettings->NumPublicConnections = NumPublicConnections; // set the number of public connections to the value passed in as a parameter
@@ -63,6 +61,14 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->bUseLobbiesIfAvailable = true; // use lobbies if available
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);//set the map name
     LastSessionSettings->BuildUniqueId = 1;//multiple users can have the same session name
+
+    //
+    // CREATE SESSION
+    //
+
+    CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);//store the delegate in an FDelegateHandle so we can later remove it from the delegate list
+
+    const ULocalPlayer * LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();//get the first local player
 
 	if(!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))//create the session using the session settings object
     {

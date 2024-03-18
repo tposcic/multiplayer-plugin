@@ -49,8 +49,7 @@ void UMenu::SetupWidget()
 {
     AddToViewport();
     SetVisibility(ESlateVisibility::Visible);
-    SetIsFocusable(true);
-    // bIsFocusable = true; //deprecated
+    SetIsFocusable(true); // previously bIsFocusable = true; -> now deprecated
 
     UWorld * World = GetWorld();
 
@@ -83,8 +82,7 @@ void UMenu::SetupMultiplayerSubsystem()
         MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
     }
 
-    //bind the custom delegates to the functions
-    if(MultiplayerSessionsSubsystem)
+    if(MultiplayerSessionsSubsystem)//bind the custom delegates to the functions
     {
         MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &UMenu::OnCreateSession);//moze i &ThisClass
         MultiplayerSessionsSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &UMenu::OnFindSessions);
@@ -149,7 +147,10 @@ void UMenu::JoinButtonClicked()
 }
 
 
-//this function is called when the server is hosted, map is travelled to and the lobby is created
+/**
+ * Tears down the menu by removing it from the parent widget and resetting the input mode.
+ * This function is called when the menu is being closed.
+ */
 void UMenu::MenuTearDown()
 {
     RemoveFromParent();
@@ -190,14 +191,6 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
     if(bWasSuccessful)
     {
         DebugHelper::PrintToLog("Session Created Successfully", FColor::Green);
-
-		// UWorld * World = GetWorld();
-
-		// if(World)
-		// {
-		// 	// World->ServerTravel("/Game/Maps/Arena_2?listen");//this should be the lobby level
-		// 	World->ServerTravel("/Game/Maps/Lobby?listen");
-		// }
 
         MultiplayerSessionsSubsystem->StartSession();
     }
