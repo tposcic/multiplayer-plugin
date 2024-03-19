@@ -43,6 +43,15 @@ private:
 	class UButton * JoinButton;
 
 	UPROPERTY(meta = (BindWidget))
+	class UButton * LowQuality;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton * MediumQuality;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton * HighQuality;
+
+	UPROPERTY(meta = (BindWidget))
 	class UTextBlock * JoinText;
 
 	UFUNCTION()
@@ -50,6 +59,15 @@ private:
 
 	UFUNCTION()
 	void JoinButtonClicked();
+
+	UFUNCTION()
+	void GraphicsQualityLowButtonClicked();
+	UFUNCTION()
+	void GraphicsQualityMediumButtonClicked();
+	UFUNCTION()
+	void GraphicsQualityHighButtonClicked();
+
+	void GraphicsQualityUpdate(int32 QualityLevel);
 
 	void MenuTearDown();
 

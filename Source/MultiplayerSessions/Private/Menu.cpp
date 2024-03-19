@@ -5,6 +5,7 @@
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "DebugHelper.h"
+#include "GameFramework/GameUserSettings.h"
 
 /**
  * Sets up the menu with the specified parameters. OVERLOADED
@@ -113,7 +114,61 @@ bool UMenu::Initialize()
         JoinButton->OnClicked.AddDynamic(this, &UMenu::JoinButtonClicked);
     }
 
+    if(LowQuality)
+    {
+        LowQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityLowButtonClicked);
+    }
+
+    if(MediumQuality)
+    {
+        MediumQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityMediumButtonClicked);
+    }
+
+    if(HighQuality)
+    {
+        HighQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityHighButtonClicked);
+    }
+
     return true;
+}
+
+void UMenu::GraphicsQualityLowButtonClicked()
+{
+    GraphicsQualityUpdate(0);
+}
+
+void UMenu::GraphicsQualityMediumButtonClicked()
+{
+    GraphicsQualityUpdate(1);
+}
+
+void UMenu::GraphicsQualityHighButtonClicked()
+{
+    GraphicsQualityUpdate(2);
+}
+
+void UMenu::GraphicsQualityUpdate(int32 QualityLevel)
+{
+    UGameUserSettings * Settings = UGameUserSettings::GetGameUserSettings();
+
+    if(Settings)
+    {
+        //print the current resolution
+        DebugHelper::PrintToLog(FString::Printf(TEXT("Current Resolution: %d x %d"), Settings->GetScreenResolution().X, Settings->GetScreenResolution().Y), FColor::Green);
+
+        //print the current scaling factor
+        Settings->SetOverallScalabilityLevel(QualityLevel);
+
+        //print the overall scalability level
+        DebugHelper::PrintToLog(FString::Printf(TEXT("Current Overall Scalability Level: %d"), Settings->GetOverallScalabilityLevel()), FColor::Green);
+
+        //apply the settings
+        Settings->ApplySettings(false);
+    }
+    else
+    {
+        DebugHelper::PrintToLog("Game User Settings is null", FColor::Red);
+    }
 }
 
 /**
