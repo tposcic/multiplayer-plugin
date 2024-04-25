@@ -180,6 +180,7 @@ void UMenu::HostButtonClicked()
     DebugHelper::PrintToLog("Host Button Clicked", FColor::Yellow);
 
     HostButton->SetIsEnabled(false);
+    JoinButton->SetIsEnabled(false);
     if(MultiplayerSessionsSubsystem)
     {
         MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
@@ -193,6 +194,7 @@ void UMenu::HostButtonClicked()
 void UMenu::JoinButtonClicked()
 {
     JoinButton->SetIsEnabled(false);
+    HostButton->SetIsEnabled(false);
     JoinText->SetText(FText::FromString("Searching..."));
 
     if(MultiplayerSessionsSubsystem)
@@ -254,6 +256,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
         DebugHelper::PrintToLog("Session Creation Failed", FColor::Red);
 
         HostButton->SetIsEnabled(true);
+        JoinButton->SetIsEnabled(true);
     }
 }
 
@@ -288,6 +291,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult> & SessionRes
     if(!bWasSuccessful)
     {
         JoinButton->SetIsEnabled(true);
+        HostButton->SetIsEnabled(true);
         JoinText->SetText(FText::FromString("Join"));
     }
 }
@@ -322,6 +326,7 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
     if(Result != EOnJoinSessionCompleteResult::Success)
     {
         JoinButton->SetIsEnabled(true);
+        HostButton->SetIsEnabled(true);
         JoinText->SetText(FText::FromString("Join"));
     }
 }

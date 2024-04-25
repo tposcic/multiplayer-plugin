@@ -46,9 +46,9 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
         DestroySession();
     }
 
-    //
+    //////////////////////////////////////////////////////////////////////////
     // SESSION SETUP
-    //
+    //////////////////////////////////////////////////////////////////////////
 
     LastSessionSettings = MakeShareable(new FOnlineSessionSettings());//create a new session settings object
 
@@ -62,9 +62,9 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);//set the map name
     LastSessionSettings->BuildUniqueId = 1;//multiple users can have the same session name
 
-    //
+    //////////////////////////////////////////////////////////////////////////
     // CREATE SESSION
-    //
+    //////////////////////////////////////////////////////////////////////////
 
     CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);//store the delegate in an FDelegateHandle so we can later remove it from the delegate list
 
@@ -207,8 +207,6 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
         }
 
         MultiplayerOnCreateSessionComplete.Broadcast(true);//broadcast that the session was created successfully
-
-        
 	}
 	else//if the session was not created successfully
 	{
@@ -290,7 +288,6 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
  */
 void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-
     if(SessionInterface)
     {
         SessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);//clear the delegate
