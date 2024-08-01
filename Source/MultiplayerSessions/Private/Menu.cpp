@@ -1,11 +1,16 @@
 #include "Menu.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Components/Slider.h"
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "DebugHelper.h"
-#include "GameFramework/GameUserSettings.h"
+// #include "GameFramework/GameUserSettings.h"
+#include "DeathEcho/Settings/DESettings.h"
+//include master sound class
+#include "Sound/SoundClass.h"
+#include "Kismet/GameplayStatics.h"
 
 /**
  * Sets up the menu with the specified parameters. OVERLOADED
@@ -114,6 +119,11 @@ bool UMenu::Initialize()
         JoinButton->OnClicked.AddDynamic(this, &UMenu::JoinButtonClicked);
     }
 
+    if(SaveGraphicsButton)
+    {
+        SaveGraphicsButton->OnClicked.AddDynamic(this, &UMenu::SaveGraphicsButtonClicked);
+    }
+
     if(LowQuality)
     {
         LowQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityLowButtonClicked);
@@ -129,7 +139,45 @@ bool UMenu::Initialize()
         HighQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityHighButtonClicked);
     }
 
+    UDESettings * Settings = Cast<UDESettings>(UDESettings::GetGameUserSettings());
+
+    if(Settings)
+    {
+        if(GlobalVolumeSlider)
+        {
+            float MasterVolume = Settings->GetMasterSoundVolume();
+            GlobalVolumeSlider->SetValue(MasterVolume);
+            
+            USoundClass* MasterSoundClass = LoadObject<USoundClass>(nullptr, TEXT("/Engine/EngineSounds/Master.Master"));
+            if (MasterSoundClass)
+            {
+                MasterSoundClass->Properties.Volume = MasterVolume;
+            }
+        }
+
+        if(MouseSensitivitySlider)
+        {
+            MouseSensitivitySlider->SetValue(Settings->GetMouseSensitivity());
+
+            //log the value of mouse sensitivity
+            DebugHelper::PrintToLog(FString::Printf(TEXT("Current Mouse Sensitivity: %f"), Settings->GetMouseSensitivity()), FColor::Green);
+        }
+
+        if(VersionText)
+        {
+            // VersionText->SetValue(Settings->GetGameVersion());
+            //convert Settings->GetGameVersion() to FText 
+
+            VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Settings->GetGameVersion())));
+        }
+    }
+
     return true;
+}
+
+void UMenu::SaveGraphicsButtonClicked()
+{
+    SaveGraphicsSettings();
 }
 
 void UMenu::GraphicsQualityLowButtonClicked()
@@ -149,7 +197,7 @@ void UMenu::GraphicsQualityHighButtonClicked()
 
 void UMenu::GraphicsQualityUpdate(int32 QualityLevel)
 {
-    UGameUserSettings * Settings = UGameUserSettings::GetGameUserSettings();
+    UDESettings * Settings = Cast<UDESettings>(UDESettings::GetGameUserSettings());
 
     if(Settings)
     {
@@ -168,6 +216,34 @@ void UMenu::GraphicsQualityUpdate(int32 QualityLevel)
     else
     {
         DebugHelper::PrintToLog("Game User Settings is null", FColor::Red);
+    }
+}
+
+void UMenu::SaveGraphicsSettings()
+{
+    UDESettings * Settings = Cast<UDESettings>(UDESettings::GetGameUserSettings());
+
+    if(Settings)
+    {
+        if(MouseSensitivitySlider)
+        {
+            UE_LOG(LogTemp, Display, TEXT("Current Mouse Sensitivity: %f"), MouseSensitivitySlider->GetValue());
+            Settings->SetMouseSensitivity(MouseSensitivitySlider->GetValue());
+        }
+
+        if(GlobalVolumeSlider)
+        {
+            UE_LOG(LogTemp, Display, TEXT("Current Global Volume: %f"), GlobalVolumeSlider->GetValue());
+            Settings->SetMasterSoundVolume(GlobalVolumeSlider->GetValue());
+
+            USoundClass* MasterSoundClass = LoadObject<USoundClass>(nullptr, TEXT("/Engine/EngineSounds/Master.Master"));
+            if (MasterSoundClass)
+            {
+                MasterSoundClass->Properties.Volume = GlobalVolumeSlider->GetValue();
+            }
+        }
+
+        DebugHelper::PrintToLog("Save Button Pressed", FColor::Yellow);
     }
 }
 

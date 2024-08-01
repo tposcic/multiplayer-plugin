@@ -40,7 +40,8 @@ public class MultiplayerSessions : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"UMG"
+				"UMG",
+				"DeathEcho"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

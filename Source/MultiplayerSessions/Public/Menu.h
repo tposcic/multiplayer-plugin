@@ -17,6 +17,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Menu")
 	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("ArenaDeathmatch")), TSoftObjectPtr<UWorld> LobbyLevel = nullptr);
 
+	UFUNCTION(BlueprintCallable, Category = "Menu")
+	void SaveGraphicsSettings();
+
 	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("ArenaDeathmatch")), FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")));
 
 protected:
@@ -52,7 +55,19 @@ private:
 	class UButton * HighQuality;
 
 	UPROPERTY(meta = (BindWidget))
+	class UButton * SaveGraphicsButton;
+
+	UPROPERTY(meta = (BindWidget))
 	class UTextBlock * JoinText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock * VersionText;
+
+	UPROPERTY(meta = (BindWidget))
+	class USlider * MouseSensitivitySlider;
+
+	UPROPERTY(meta = (BindWidget))
+	class USlider * GlobalVolumeSlider;
 
 	UFUNCTION()
 	void HostButtonClicked();
@@ -62,10 +77,15 @@ private:
 
 	UFUNCTION()
 	void GraphicsQualityLowButtonClicked();
+
 	UFUNCTION()
 	void GraphicsQualityMediumButtonClicked();
+
 	UFUNCTION()
 	void GraphicsQualityHighButtonClicked();
+
+	UFUNCTION()
+	void SaveGraphicsButtonClicked();
 
 	void GraphicsQualityUpdate(int32 QualityLevel);
 
