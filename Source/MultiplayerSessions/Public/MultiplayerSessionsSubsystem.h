@@ -42,6 +42,9 @@ public:
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 
+	int32 DesiredNumberOfPublicConnections{};//this will initialize it to an empty string
+	FString DesiredMatchType{};
+
 protected:
 	// Internal callbacks for the delegates added to the Online Session Interface delegate list
 	// This will be called inside the MultiplayerSessionsSubsystem.cpp file

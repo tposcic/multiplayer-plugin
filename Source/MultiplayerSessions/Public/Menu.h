@@ -77,7 +77,10 @@ private:
 	//add multiplayer sessions subsystem
 	class UMultiplayerSessionsSubsystem * MultiplayerSessionsSubsystem;
 
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
 	int32 NumPublicConnections{4};
+
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
 	FString MatchType{TEXT("ArenaDeathmatch")};
 
 	FString PathToLobby{TEXT("")};
