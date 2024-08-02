@@ -158,16 +158,10 @@ bool UMenu::Initialize()
         if(MouseSensitivitySlider)
         {
             MouseSensitivitySlider->SetValue(Settings->GetMouseSensitivity());
-
-            //log the value of mouse sensitivity
-            DebugHelper::PrintToLog(FString::Printf(TEXT("Current Mouse Sensitivity: %f"), Settings->GetMouseSensitivity()), FColor::Green);
         }
 
         if(VersionText)
         {
-            // VersionText->SetValue(Settings->GetGameVersion());
-            //convert Settings->GetGameVersion() to FText 
-
             VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Settings->GetGameVersion())));
         }
     }
@@ -242,8 +236,6 @@ void UMenu::SaveGraphicsSettings()
                 MasterSoundClass->Properties.Volume = GlobalVolumeSlider->GetValue();
             }
         }
-
-        DebugHelper::PrintToLog("Save Button Pressed", FColor::Yellow);
     }
 }
 
@@ -253,8 +245,6 @@ void UMenu::SaveGraphicsSettings()
  */
 void UMenu::HostButtonClicked()
 {
-    DebugHelper::PrintToLog("Host Button Clicked", FColor::Yellow);
-
     HostButton->SetIsEnabled(false);
     JoinButton->SetIsEnabled(false);
     if(MultiplayerSessionsSubsystem)

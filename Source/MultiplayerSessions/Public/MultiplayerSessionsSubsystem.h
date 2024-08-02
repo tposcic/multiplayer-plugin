@@ -26,6 +26,8 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 public:
 	UMultiplayerSessionsSubsystem();
 
+	FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; }
+
 	// To handle session functionality the menu class calls these	
 	void CreateSession(int32 NumPublicConnections, FString MatchType);
 	void FindSessions(int32 MaxSearchResults);
