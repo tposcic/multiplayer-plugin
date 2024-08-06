@@ -11,6 +11,9 @@
 //include master sound class
 #include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
+#include "HttpModule.h"
+#include "Interfaces/IHttpResponse.h"
+#include "Interfaces/IHttpRequest.h"
 
 /**
  * Sets up the menu with the specified parameters. OVERLOADED
@@ -109,6 +112,8 @@ bool UMenu::Initialize()
 {
     if(!Super::Initialize()) return false;
 
+    // GetTopPlayers();
+
     if(HostButton)
     {
         HostButton->OnClicked.AddDynamic(this, &UMenu::HostButtonClicked);
@@ -137,6 +142,11 @@ bool UMenu::Initialize()
     if(HighQuality)
     {
         HighQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityHighButtonClicked);
+    }
+
+    if(MadQuality)
+    {
+        MadQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityMadButtonClicked);
     }
 
     UDESettings * Settings = Cast<UDESettings>(UDESettings::GetGameUserSettings());
@@ -169,6 +179,64 @@ bool UMenu::Initialize()
     return true;
 }
 
+void UMenu::GetTopPlayers()
+{
+    DebugHelper::PrintToLog("Request sent to server", FColor::Green);
+
+    auto Request = FHttpModule::Get().CreateRequest();
+    Request->SetURL(FString("http://127.0.0.1:7878/players/top"));
+
+    Request->OnProcessRequestComplete().BindLambda([](FHttpRequestPtr Request, FHttpResponsePtr Response, bool success) {
+        if (success && Response.IsValid())
+        {
+            UE_LOG(LogTemp, Display, TEXT("Response"));
+
+            FString JSONResponse = Response->GetContentAsString();    
+
+            // DebugHelper::PrintToLog(JSONResponse, FColor::Green);
+
+            TSharedPtr<FJsonObject> JsonObject;
+            TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JSONResponse);
+
+            if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+            {
+                UE_LOG(LogTemp, Display, TEXT("Valid JSON"));
+
+                // Loop through the JSON object
+                for (auto& Elem : JsonObject->Values)
+                {
+                    FString Key = Elem.Key;
+
+                    if(Key == FString("players"))
+                    {
+                        for (auto & Player : Elem.Value->AsArray())
+                        {
+                            TSharedPtr<FJsonObject> PlayerObject = Player->AsObject();
+
+                            if (PlayerObject.IsValid())
+                            {
+                                FString Username = PlayerObject->GetStringField("username");
+                                FString Score = PlayerObject->GetStringField("score");
+                                // UE_LOG(LogTemp, Display, TEXT("username: %s"), *Username);
+                                // UE_LOG(LogTemp, Display, TEXT("score: %s"), *Score);
+
+                                DebugHelper::PrintToLog(FString::Printf(TEXT("username: %s | score: %s"), *Username, *Score), FColor::Green);
+
+                            }                        
+                        }
+                    }
+                }
+            }            
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Request failed or response is invalid"));
+        }
+    });
+
+    Request->ProcessRequest();
+}
+
 void UMenu::SaveGraphicsButtonClicked()
 {
     SaveGraphicsSettings();
@@ -188,6 +256,12 @@ void UMenu::GraphicsQualityHighButtonClicked()
 {
     GraphicsQualityUpdate(2);
 }
+
+void UMenu::GraphicsQualityMadButtonClicked()
+{
+    GraphicsQualityUpdate(3);
+}
+
 
 void UMenu::GraphicsQualityUpdate(int32 QualityLevel)
 {
@@ -231,11 +305,19 @@ void UMenu::SaveGraphicsSettings()
             Settings->SetMasterSoundVolume(GlobalVolumeSlider->GetValue());
 
             USoundClass* MasterSoundClass = LoadObject<USoundClass>(nullptr, TEXT("/Engine/EngineSounds/Master.Master"));
+
             if (MasterSoundClass)
             {
                 MasterSoundClass->Properties.Volume = GlobalVolumeSlider->GetValue();
             }
         }
+    
+        if(VersionText)
+        {
+            VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Settings->GetGameVersion())));
+        }
+
+        Settings->ApplySettings(false);
     }
 }
 
@@ -259,16 +341,34 @@ void UMenu::HostButtonClicked()
  */
 void UMenu::JoinButtonClicked()
 {
-    JoinButton->SetIsEnabled(false);
+    // JoinButton->SetIsEnabled(false);
+    if(bIsJoining)
+    {
+        JoinCanceled();
+        return;
+    }
+
     HostButton->SetIsEnabled(false);
-    JoinText->SetText(FText::FromString("Searching..."));
+    JoinText->SetText(FText::FromString("Cancel"));
 
     if(MultiplayerSessionsSubsystem)
     {
-        MultiplayerSessionsSubsystem->FindSessions(10000);
+        MultiplayerSessionsSubsystem->FindSessions(10);//The size of the search results shouldn't really matter.  Epic's documentation for BuildUniqueId is Used to keep different builds from seeing each other during searches
     }
+
+    bIsJoining = true;
 }
 
+void UMenu::JoinCanceled()
+{
+    bIsJoining = false;
+
+    DebugHelper::PrintToLog("Canceled join", FColor::Red);
+
+    HostButton->SetIsEnabled(true);
+    JoinButton->SetIsEnabled(true);
+    JoinText->SetText(FText::FromString("Join"));
+}
 
 /**
  * Tears down the menu by removing it from the parent widget and resetting the input mode.
@@ -338,6 +438,8 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult> & SessionRes
 
 	for (auto Result : SessionResults)
 	{
+        if(!bIsJoining) return;
+
 		FString Id = Result.GetSessionIdStr();
 		FString UserName = Result.Session.OwningUserName;
 		FString SettingsValue;
@@ -356,7 +458,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult> & SessionRes
 
     if(!bWasSuccessful)
     {
-        JoinButton->SetIsEnabled(true);
+        // JoinButton->SetIsEnabled(true);
         HostButton->SetIsEnabled(true);
         JoinText->SetText(FText::FromString("Join"));
     }
@@ -391,10 +493,12 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 
     if(Result != EOnJoinSessionCompleteResult::Success)
     {
-        JoinButton->SetIsEnabled(true);
+        // JoinButton->SetIsEnabled(true);
         HostButton->SetIsEnabled(true);
         JoinText->SetText(FText::FromString("Join"));
     }
+
+    bIsJoining = false;
 }
 
 /**

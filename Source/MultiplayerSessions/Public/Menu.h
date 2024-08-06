@@ -15,12 +15,12 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Menu")
-	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("ArenaDeathmatch")), TSoftObjectPtr<UWorld> LobbyLevel = nullptr);
+	void MenuSetup(int32 NumberOfPublicConnections = 2, FString TypeOfMatch = FString(TEXT("DeathMatch")), TSoftObjectPtr<UWorld> LobbyLevel = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "Menu")
 	void SaveGraphicsSettings();
 
-	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("ArenaDeathmatch")), FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")));
+	void MenuSetup(int32 NumberOfPublicConnections = 2, FString TypeOfMatch = FString(TEXT("DeathMatch")), FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")));
 
 protected:
 	virtual bool Initialize() override;
@@ -55,6 +55,9 @@ private:
 	class UButton * HighQuality;
 
 	UPROPERTY(meta = (BindWidget))
+	class UButton * MadQuality;
+
+	UPROPERTY(meta = (BindWidget))
 	class UButton * SaveGraphicsButton;
 
 	UPROPERTY(meta = (BindWidget))
@@ -76,6 +79,9 @@ private:
 	void JoinButtonClicked();
 
 	UFUNCTION()
+	void JoinCanceled();
+
+	UFUNCTION()
 	void GraphicsQualityLowButtonClicked();
 
 	UFUNCTION()
@@ -83,6 +89,9 @@ private:
 
 	UFUNCTION()
 	void GraphicsQualityHighButtonClicked();
+
+	UFUNCTION()
+	void GraphicsQualityMadButtonClicked();
 
 	UFUNCTION()
 	void SaveGraphicsButtonClicked();
@@ -98,10 +107,14 @@ private:
 	class UMultiplayerSessionsSubsystem * MultiplayerSessionsSubsystem;
 
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
-	int32 NumPublicConnections{4};
+	int32 NumPublicConnections{1};
 
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
-	FString MatchType{TEXT("ArenaDeathmatch")};
+	FString MatchType{TEXT("DeathMatch")};
 
 	FString PathToLobby{TEXT("")};
+
+	bool bIsJoining = false;
+
+	void GetTopPlayers();
 };
