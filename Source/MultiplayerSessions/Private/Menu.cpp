@@ -2,6 +2,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/Slider.h"
+#include "Components/ComboBoxString.h"
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
@@ -11,9 +12,7 @@
 //include master sound class
 #include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
-#include "HttpModule.h"
-#include "Interfaces/IHttpResponse.h"
-#include "Interfaces/IHttpRequest.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 /**
  * Sets up the menu with the specified parameters. OVERLOADED
@@ -112,8 +111,6 @@ bool UMenu::Initialize()
 {
     if(!Super::Initialize()) return false;
 
-    // GetTopPlayers();
-
     if(HostButton)
     {
         HostButton->OnClicked.AddDynamic(this, &UMenu::HostButtonClicked);
@@ -174,67 +171,50 @@ bool UMenu::Initialize()
         {
             VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Settings->GetGameVersion())));
         }
+
+        if(ResolutionSelect)
+        {
+            TArray<FIntPoint> SupportedResolutions;
+
+            UKismetSystemLibrary::GetSupportedFullscreenResolutions(SupportedResolutions);
+
+            for(FIntPoint Resolution : SupportedResolutions)
+            {
+                ResolutionSelect->AddOption(FString::Printf(TEXT("%dx%d"), Resolution.X, Resolution.Y));
+            }
+
+            FIntPoint CurrentScreenResolution = Settings->GetScreenResolution();
+            FString CurrentScreenResolutionString = FString::Printf(TEXT("%dx%d"), CurrentScreenResolution.X, CurrentScreenResolution.Y);
+
+            ResolutionSelect->SetSelectedOption(CurrentScreenResolutionString);
+        }
+
+        if(FullScreenModeSelect)
+        {
+            EWindowMode::Type WindowMode = Settings->GetFullscreenMode();
+            int32 FullScreenMode = 0;
+
+            switch (WindowMode)
+            {
+                case EWindowMode::Fullscreen:
+                    FullScreenMode = 0;
+                    break;
+                case EWindowMode::WindowedFullscreen:
+                    FullScreenMode = 1;
+                    break;
+                case EWindowMode::Windowed:
+                    FullScreenMode = 2;
+                    break;
+                default:
+                    FullScreenMode = 2;
+                    break;
+            }
+
+            FullScreenModeSelect->SetSelectedIndex(FullScreenMode);
+        }
     }
 
     return true;
-}
-
-void UMenu::GetTopPlayers()
-{
-    DebugHelper::PrintToLog("Request sent to server", FColor::Green);
-
-    auto Request = FHttpModule::Get().CreateRequest();
-    Request->SetURL(FString("http://127.0.0.1:7878/players/top"));
-
-    Request->OnProcessRequestComplete().BindLambda([](FHttpRequestPtr Request, FHttpResponsePtr Response, bool success) {
-        if (success && Response.IsValid())
-        {
-            UE_LOG(LogTemp, Display, TEXT("Response"));
-
-            FString JSONResponse = Response->GetContentAsString();    
-
-            // DebugHelper::PrintToLog(JSONResponse, FColor::Green);
-
-            TSharedPtr<FJsonObject> JsonObject;
-            TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JSONResponse);
-
-            if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
-            {
-                UE_LOG(LogTemp, Display, TEXT("Valid JSON"));
-
-                // Loop through the JSON object
-                for (auto& Elem : JsonObject->Values)
-                {
-                    FString Key = Elem.Key;
-
-                    if(Key == FString("players"))
-                    {
-                        for (auto & Player : Elem.Value->AsArray())
-                        {
-                            TSharedPtr<FJsonObject> PlayerObject = Player->AsObject();
-
-                            if (PlayerObject.IsValid())
-                            {
-                                FString Username = PlayerObject->GetStringField("username");
-                                FString Score = PlayerObject->GetStringField("score");
-                                // UE_LOG(LogTemp, Display, TEXT("username: %s"), *Username);
-                                // UE_LOG(LogTemp, Display, TEXT("score: %s"), *Score);
-
-                                DebugHelper::PrintToLog(FString::Printf(TEXT("username: %s | score: %s"), *Username, *Score), FColor::Green);
-
-                            }                        
-                        }
-                    }
-                }
-            }            
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("Request failed or response is invalid"));
-        }
-    });
-
-    Request->ProcessRequest();
 }
 
 void UMenu::SaveGraphicsButtonClicked()
@@ -269,16 +249,12 @@ void UMenu::GraphicsQualityUpdate(int32 QualityLevel)
 
     if(Settings)
     {
-        //print the current resolution
         DebugHelper::PrintToLog(FString::Printf(TEXT("Current Resolution: %d x %d"), Settings->GetScreenResolution().X, Settings->GetScreenResolution().Y), FColor::Green);
 
-        //print the current scaling factor
         Settings->SetOverallScalabilityLevel(QualityLevel);
 
-        //print the overall scalability level
         DebugHelper::PrintToLog(FString::Printf(TEXT("Current Overall Scalability Level: %d"), Settings->GetOverallScalabilityLevel()), FColor::Green);
 
-        //apply the settings
         Settings->ApplySettings(false);
     }
     else
@@ -315,6 +291,33 @@ void UMenu::SaveGraphicsSettings()
         if(VersionText)
         {
             VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Settings->GetGameVersion())));
+        }
+
+        if(ResolutionSelect)
+        {
+            FString Resolution = ResolutionSelect->GetSelectedOption();
+
+            TArray<FString> ResolutionArray;
+            Resolution.ParseIntoArray(ResolutionArray, TEXT("x"), true);
+
+            if(ResolutionArray.Num() == 2)
+            {
+                int32 Width = FCString::Atoi(*ResolutionArray[0]);
+                int32 Height = FCString::Atoi(*ResolutionArray[1]);
+
+                if(Width > 0 && Height > 0)//if the Atoi string conversion fails one of them will be 0 
+                {
+                    Settings->SetScreenResolution(FIntPoint(Width, Height));
+                }
+            }
+        }
+
+        if(FullScreenModeSelect)
+        {
+            int32 WindowMode = FullScreenModeSelect->GetSelectedIndex();
+            EWindowMode::Type FullScreenMode = EWindowMode::ConvertIntToWindowMode(WindowMode);
+
+            Settings->SetFullscreenMode(FullScreenMode);
         }
 
         Settings->ApplySettings(false);

@@ -72,6 +72,12 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	class USlider * GlobalVolumeSlider;
 
+	UPROPERTY(meta = (BindWidget))
+	class UComboBoxString * ResolutionSelect;
+
+	UPROPERTY(meta = (BindWidget))
+	class UComboBoxString * FullScreenModeSelect;
+
 	UFUNCTION()
 	void HostButtonClicked();
 
