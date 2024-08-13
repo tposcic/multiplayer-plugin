@@ -32,6 +32,9 @@ protected:
 	UFUNCTION()//this needs to be a UFUNCTION() so that we can bind it to the delegate
 	void OnCreateSession(bool bWasSuccessful);
 	void OnFindSessions(const TArray<FOnlineSessionSearchResult> & SessionResults, bool bWasSuccessful);//these are not dynamic delegates so we don't need UFUNCTION
+	
+	void JoinSession(FOnlineSessionSearchResult Session);
+	
 	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);//these are not dynamic delegates so we don't need UFUNCTION
 	UFUNCTION()//this needs to be a UFUNCTION() so that we can bind it to the delegate
 	void OnDestroySession(bool bWasSuccessful);
@@ -76,7 +79,18 @@ private:
 	class UComboBoxString * ResolutionSelect;
 
 	UPROPERTY(meta = (BindWidget))
+	class UComboBoxString * MapSelect;
+
+	UPROPERTY(meta = (BindWidget))
 	class UComboBoxString * FullScreenModeSelect;
+
+	UPROPERTY(meta = (BindWidget))
+	class UStackBox * ServerList;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class UUserWidget> ListEntryWidget;
+
+	TArray<FOnlineSessionSearchResult> SearchResults; 
 
 	UFUNCTION()
 	void HostButtonClicked();
@@ -116,7 +130,7 @@ private:
 	int32 NumPublicConnections{1};
 
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
-	FString MatchType{TEXT("DeathMatch")};
+	FString MatchType{TEXT("D_ShootingRange")};
 
 	FString PathToLobby{TEXT("")};
 

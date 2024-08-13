@@ -63,6 +63,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->bUsesPresence = true; // use presence to advertise the session
 	LastSessionSettings->bUseLobbiesIfAvailable = true; // use lobbies if available
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);//set the map name
+	LastSessionSettings->Set(FName("GameType"), FString("DeathEcho"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);//set the map name
     LastSessionSettings->BuildUniqueId = 385104;//session system will use the id to get the list of games related to this version of the game
 
     //////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,11 @@
 #include "Components/TextBlock.h"
 #include "Components/Slider.h"
 #include "Components/ComboBoxString.h"
+// #include "Components/ListView.h"
+#include "Components/StackBox.h"
 #include "MultiplayerSessionsSubsystem.h"
+#include "ButtonWithParameter.h"
+// #include "ListViewEntry.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "DebugHelper.h"
@@ -13,6 +17,7 @@
 #include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "ListViewEntryWidget.h"
 
 /**
  * Sets up the menu with the specified parameters. OVERLOADED
@@ -332,8 +337,15 @@ void UMenu::HostButtonClicked()
 {
     HostButton->SetIsEnabled(false);
     JoinButton->SetIsEnabled(false);
+
+    if(MapSelect)
+    {
+        MatchType = MapSelect->GetSelectedOption();
+    }
+
     if(MultiplayerSessionsSubsystem)
     {
+        MultiplayerSessionsSubsystem->DestroySession();//in case destroy a session if its alive
         MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
     }
 }
@@ -356,6 +368,7 @@ void UMenu::JoinButtonClicked()
 
     if(MultiplayerSessionsSubsystem)
     {
+        MultiplayerSessionsSubsystem->DestroySession();//in case destroy a session if its alive
         MultiplayerSessionsSubsystem->FindSessions(10);//The size of the search results shouldn't really matter.  Epic's documentation for BuildUniqueId is Used to keep different builds from seeing each other during searches
     }
 
@@ -366,11 +379,14 @@ void UMenu::JoinCanceled()
 {
     bIsJoining = false;
 
-    DebugHelper::PrintToLog("Canceled join", FColor::Red);
+    if(MultiplayerSessionsSubsystem && MultiplayerSessionsSubsystem->GetSessionInterface())
+    {
+        MultiplayerSessionsSubsystem->GetSessionInterface()->CancelFindSessions();
+    }
 
     HostButton->SetIsEnabled(true);
     JoinButton->SetIsEnabled(true);
-    JoinText->SetText(FText::FromString("Join"));
+    JoinText->SetText(FText::FromString("Search"));
 }
 
 /**
@@ -439,32 +455,83 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult> & SessionRes
 {
     if(MultiplayerSessionsSubsystem == nullptr) return;
 
+    if(ServerList)
+    {
+        ServerList->ClearChildren();
+    }
+
 	for (auto Result : SessionResults)
 	{
         if(!bIsJoining) return;
 
-		FString Id = Result.GetSessionIdStr();
-		FString UserName = Result.Session.OwningUserName;
-		FString SettingsValue;
+        // MultiplayerSessionsSubsystem->JoinSession(Result);
 
-		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
+        FString Id = Result.GetSessionIdStr();
+        FString UserName = Result.Session.OwningUserName;
+        FString SettingsValue;
+        FString GameType;
 
-		if(SettingsValue == MatchType)
-		{
-            DebugHelper::PrintToLog(FString::Printf(TEXT("Found session %s - %s. Joining!"), *Id, *UserName), FColor::Green);
+        Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
+        Result.Session.SessionSettings.Get(FName("GameType"), GameType);
 
-			MultiplayerSessionsSubsystem->JoinSession(Result);//add the join session complete delegate
+        DebugHelper::PrintToLog(FString::Printf(TEXT("Session %s - %s | Map: %s"), *Id, *UserName, *SettingsValue), FColor::Green);
 
-            return;// short circuit the function so that we don't join multiple sessions at once
-		}
+        if(ServerList && GameType == FString("DeathEcho"))
+        {
+            //create a new widget 
+            if(ListEntryWidget)
+            {
+                UWorld* World = GetWorld();
+                if (World)
+                {
+                    UListViewEntryWidget * NewWidget = CreateWidget<UListViewEntryWidget>(World, ListEntryWidget);
+                    if (NewWidget)
+                    {
+                        
+                        //from NewWidget get a reference to the ServerTitle Text Block widget and change the server title
+                        UTextBlock * ServerTitle = Cast<UTextBlock>(NewWidget->GetWidgetFromName("ServerTitle"));
+
+                        if(ServerTitle)
+                        {
+                            ServerTitle->SetText(FText::FromString(FString::Printf(TEXT("Server: %s | Map: %s"),*UserName, *SettingsValue)));
+                        }
+
+                        NewWidget->Session = Result;
+
+                        UButton * ServerJoinButton = Cast<UButton>(NewWidget->GetWidgetFromName("JoinButton"));
+
+                        if(ServerJoinButton)
+                        {
+                            ServerJoinButton->SetToolTipText(FText::FromString(Id));
+                        }
+
+                        //add the new widget to ServerList StackBox
+                        ServerList->AddChild(NewWidget);
+                    }
+                }
+            }
+        }
 	}
 
     if(!bWasSuccessful)
     {
         // JoinButton->SetIsEnabled(true);
         HostButton->SetIsEnabled(true);
-        JoinText->SetText(FText::FromString("Join"));
+        JoinText->SetText(FText::FromString("Search"));
     }
+}
+
+void UMenu::JoinSession(FOnlineSessionSearchResult Session)
+{
+    FString Id = Session.GetSessionIdStr();
+    FString UserName = Session.Session.OwningUserName;
+    FString SettingsValue;
+
+    Session.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
+
+    DebugHelper::PrintToLog(FString::Printf(TEXT("Session %s - %s | Map: %s"), *Id, *UserName, *SettingsValue), FColor::Green);
+
+    MultiplayerSessionsSubsystem->JoinSession(Session);//add the join session complete delegate
 }
 
 /**
@@ -498,7 +565,7 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
     {
         // JoinButton->SetIsEnabled(true);
         HostButton->SetIsEnabled(true);
-        JoinText->SetText(FText::FromString("Join"));
+        JoinText->SetText(FText::FromString("Search"));
     }
 
     bIsJoining = false;
