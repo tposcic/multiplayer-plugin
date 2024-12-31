@@ -7,7 +7,7 @@ Unreal Engine 5 Plugin that provides a subsystem to handle online connectivity a
 
 ## Requirements
 
-- Unreal Engines: 5.3
+- Unreal Engine: 5.3
 - Is generally tailored for the Steam platform
 
 ## Setup
