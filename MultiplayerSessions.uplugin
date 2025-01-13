@@ -1,18 +1,18 @@
 {
 	"FileVersion": 3,
-	"Version": 1,
-	"VersionName": "1.0",
+	"Version": 2,
+	"VersionName": "1.1",
 	"FriendlyName": "MultiplayerSessions",
 	"Description": "Plugin handles Steam multiplayer sessions and provides blueprint nodes for creating, joining and leaving multiplayer sessions. It also provides blueprint nodes for getting the list of sessions and getting the session details.",
 	"Category": "Other",
 	"CreatedBy": "Toni Poscic",
-	"CreatedByURL": "",
+	"CreatedByURL": "https://toni-poscic.me",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
 	"CanContainContent": true,
-	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": true,
 	"Installed": false,
 	"Modules": [
 		{
