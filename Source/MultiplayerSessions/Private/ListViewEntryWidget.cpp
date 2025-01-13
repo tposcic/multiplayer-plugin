@@ -1,3 +1,5 @@
+// Copyright: Toni Poscic
+
 #include "ListViewEntryWidget.h"
 #include "Components/Button.h"
 

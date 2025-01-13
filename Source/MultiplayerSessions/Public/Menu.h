@@ -1,8 +1,10 @@
+// Copyright: Toni Poscic
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Interfaces/OnlineSessionInterface.h"//ovo nebi trebali importati ovdje
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Menu.generated.h"
 
 /**

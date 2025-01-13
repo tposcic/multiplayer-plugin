@@ -1,21 +1,17 @@
+// Copyright: Toni Poscic
+
 #include "Menu.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/Slider.h"
 #include "Components/ComboBoxString.h"
-// #include "Components/ListView.h"
 #include "Components/StackBox.h"
 #include "MultiplayerSessionsSubsystem.h"
-#include "ButtonWithParameter.h"
-// #include "ListViewEntry.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "DebugHelper.h"
-// #include "GameFramework/GameUserSettings.h"
 #include "DeathEcho/Settings/DESettings.h"
-//include master sound class
 #include "Sound/SoundClass.h"
-#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "ListViewEntryWidget.h"
 

@@ -1,3 +1,5 @@
+// Copyright: Toni Poscic
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -26,18 +28,39 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 public:
 	UMultiplayerSessionsSubsystem();
 
-	FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; }
+	// FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; }
+	const IOnlineSessionPtr GetSessionInterface();
 
-	// To handle session functionality the menu class calls these	
+	/**
+	 * Creates a new session with the specified number of public connections and match type.
+	 *
+	 * @param NumPublicConnections The number of public connections for the session.
+	 * @param MatchType The match type for the session.
+	 */
 	void CreateSession(int32 NumPublicConnections, FString MatchType);
+	/**
+	 * Finds online sessions.
+	 *
+	 * @param MaxSearchResults The maximum number of search results to return.
+	 */
 	void FindSessions(int32 MaxSearchResults);
+
+	/**
+	 * Joins the specified online session.
+	 *
+	 * @param SearchResult The search result of the session to join.
+	 */
 	void JoinSession(const FOnlineSessionSearchResult & SearchResult);
+
+	/**
+	 * Destroy session via name NAME_GameSession, and broadcast the destroy event
+	 */
 	void DestroySession();
 	void StartSession();
 
-	//
-	// Custom delegates for the menu class to bind callbacks to
-	//
+	/**
+	 * Custom delegates for the menu class to bind callbacks to
+	 */
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
 	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
 	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
@@ -57,7 +80,7 @@ protected:
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
 
 private:
-	IOnlineSessionPtr SessionInterface;//Online Session Interface
+	IOnlineSessionPtr SessionInterface;//@TODO: Fix possible issue with storing IOnlineSessionPtr
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;//these are the settings used when we last created a session
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 
