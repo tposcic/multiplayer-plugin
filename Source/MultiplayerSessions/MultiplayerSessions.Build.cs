@@ -44,7 +44,7 @@ public class MultiplayerSessions : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UMG",
-				"DeathEcho"
+				"Combustion_Vertical"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

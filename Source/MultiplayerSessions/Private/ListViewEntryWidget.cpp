@@ -1,6 +1,7 @@
 // Copyright: Toni Poscic
 
 #include "ListViewEntryWidget.h"
+#include "MultiplayerSessionsSubsystem.h"
 #include "Components/Button.h"
 
 

@@ -10,18 +10,11 @@
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "DebugHelper.h"
-#include "DeathEcho/Settings/DESettings.h"
+#include "Combustion_Vertical/Settings/BaseSettings.h"
 #include "Sound/SoundClass.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "ListViewEntryWidget.h"
 
-/**
- * Sets up the menu with the specified parameters. OVERLOADED
- *
- * @param NumberOfPublicConnections The number of public connections for the multiplayer session.
- * @param TypeOfMatch The type of match for the multiplayer session.
- * @param LobbyLevel The lobby level for the multiplayer session.
- */
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, TSoftObjectPtr<UWorld> LobbyLevel)
 {
     PathToLobby = LobbyLevel.GetLongPackageName().Append("?listen");
@@ -32,13 +25,6 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, TSof
     SetupMultiplayerSubsystem();
 }
 
-/**
- * Sets up the menu with the specified parameters.
- *
- * @param NumberOfPublicConnections The number of public connections for the lobby.
- * @param TypeOfMatch The type of match for the lobby.
- * @param LobbyPath The path to the lobby.
- */
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FString LobbyPath)
 {
     PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
@@ -49,11 +35,16 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FStr
     SetupMultiplayerSubsystem();
 }
 
-/**
- * Sets up the widget for the menu.
- * Adds the widget to the viewport, sets its visibility to visible, and makes it focusable.
- * Sets the input mode to UI only, locks the mouse to the viewport, and shows the mouse cursor.
- */
+UBaseSettings * UMenu::GetSettings()
+{
+    if (Settings == nullptr)
+    {
+        Settings = Cast<UBaseSettings>(UBaseSettings::GetGameUserSettings());
+    }
+
+    return Settings;
+}
+
 void UMenu::SetupWidget()
 {
     AddToViewport();
@@ -77,11 +68,6 @@ void UMenu::SetupWidget()
     }
 }
 
-/**
- * Sets up the multiplayer subsystem for the menu.
- * This function retrieves the game instance and assigns the multiplayer sessions subsystem to the class member variable.
- * It also binds custom delegates to their respective functions.
- */
 void UMenu::SetupMultiplayerSubsystem()
 {
     UGameInstance * GameInstance = GetGameInstance();
@@ -101,13 +87,6 @@ void UMenu::SetupMultiplayerSubsystem()
     }
 }
 
-/**
- * Initializes the menu.
- * This function is called when the menu is being initialized.
- * It sets up the button click events for the Host and Join buttons.
- *
- * @return True if the initialization was successful, false otherwise.
- */
 bool UMenu::Initialize()
 {
     if(!Super::Initialize()) return false;
@@ -146,14 +125,12 @@ bool UMenu::Initialize()
     {
         MadQuality->OnClicked.AddDynamic(this, &UMenu::GraphicsQualityMadButtonClicked);
     }
-
-    UDESettings * Settings = Cast<UDESettings>(UDESettings::GetGameUserSettings());
-
-    if(Settings)
+    
+    if(GetSettings())
     {
         if(GlobalVolumeSlider)
         {
-            float MasterVolume = Settings->GetMasterSoundVolume();
+            float MasterVolume = GetSettings()->GetMasterSoundVolume();
             GlobalVolumeSlider->SetValue(MasterVolume);
             
             USoundClass* MasterSoundClass = LoadObject<USoundClass>(nullptr, TEXT("/Engine/EngineSounds/Master.Master"));
@@ -165,12 +142,12 @@ bool UMenu::Initialize()
 
         if(MouseSensitivitySlider)
         {
-            MouseSensitivitySlider->SetValue(Settings->GetMouseSensitivity());
+            MouseSensitivitySlider->SetValue(GetSettings()->GetMouseSensitivity());
         }
 
         if(VersionText)
         {
-            VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Settings->GetGameVersion())));
+            VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), GetSettings()->GetGameVersion())));
         }
 
         if(ResolutionSelect)
@@ -184,7 +161,7 @@ bool UMenu::Initialize()
                 ResolutionSelect->AddOption(FString::Printf(TEXT("%dx%d"), Resolution.X, Resolution.Y));
             }
 
-            FIntPoint CurrentScreenResolution = Settings->GetScreenResolution();
+            FIntPoint CurrentScreenResolution = GetSettings()->GetScreenResolution();
             FString CurrentScreenResolutionString = FString::Printf(TEXT("%dx%d"), CurrentScreenResolution.X, CurrentScreenResolution.Y);
 
             ResolutionSelect->SetSelectedOption(CurrentScreenResolutionString);
@@ -192,7 +169,7 @@ bool UMenu::Initialize()
 
         if(FullScreenModeSelect)
         {
-            EWindowMode::Type WindowMode = Settings->GetFullscreenMode();
+            EWindowMode::Type WindowMode = GetSettings()->GetFullscreenMode();
             int32 FullScreenMode = 0;
 
             switch (WindowMode)
@@ -246,17 +223,15 @@ void UMenu::GraphicsQualityMadButtonClicked()
 
 void UMenu::GraphicsQualityUpdate(int32 QualityLevel)
 {
-    UDESettings * Settings = Cast<UDESettings>(UDESettings::GetGameUserSettings());
-
-    if(Settings)
+    if(GetSettings())
     {
-        DebugHelper::PrintToLog(FString::Printf(TEXT("Current Resolution: %d x %d"), Settings->GetScreenResolution().X, Settings->GetScreenResolution().Y), FColor::Green);
+        DebugHelper::PrintToLog(FString::Printf(TEXT("Current Resolution: %d x %d"), GetSettings()->GetScreenResolution().X, GetSettings()->GetScreenResolution().Y), FColor::Green);
 
-        Settings->SetOverallScalabilityLevel(QualityLevel);
+        GetSettings()->SetOverallScalabilityLevel(QualityLevel);
 
-        DebugHelper::PrintToLog(FString::Printf(TEXT("Current Overall Scalability Level: %d"), Settings->GetOverallScalabilityLevel()), FColor::Green);
+        DebugHelper::PrintToLog(FString::Printf(TEXT("Current Overall Scalability Level: %d"), GetSettings()->GetOverallScalabilityLevel()), FColor::Green);
 
-        Settings->ApplySettings(false);
+        GetSettings()->ApplySettings(false);
     }
     else
     {
@@ -266,20 +241,16 @@ void UMenu::GraphicsQualityUpdate(int32 QualityLevel)
 
 void UMenu::SaveGraphicsSettings()
 {
-    UDESettings * Settings = Cast<UDESettings>(UDESettings::GetGameUserSettings());
-
-    if(Settings)
+    if(GetSettings())
     {
         if(MouseSensitivitySlider)
         {
-            UE_LOG(LogTemp, Display, TEXT("Current Mouse Sensitivity: %f"), MouseSensitivitySlider->GetValue());
-            Settings->SetMouseSensitivity(MouseSensitivitySlider->GetValue());
+            GetSettings()->SetMouseSensitivity(MouseSensitivitySlider->GetValue());
         }
 
         if(GlobalVolumeSlider)
         {
-            UE_LOG(LogTemp, Display, TEXT("Current Global Volume: %f"), GlobalVolumeSlider->GetValue());
-            Settings->SetMasterSoundVolume(GlobalVolumeSlider->GetValue());
+            GetSettings()->SetMasterSoundVolume(GlobalVolumeSlider->GetValue());
 
             USoundClass* MasterSoundClass = LoadObject<USoundClass>(nullptr, TEXT("/Engine/EngineSounds/Master.Master"));
 
@@ -291,7 +262,7 @@ void UMenu::SaveGraphicsSettings()
     
         if(VersionText)
         {
-            VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Settings->GetGameVersion())));
+            VersionText->SetText(FText::FromString(FString::Printf(TEXT("%d"), GetSettings()->GetGameVersion())));
         }
 
         if(ResolutionSelect)
@@ -308,7 +279,7 @@ void UMenu::SaveGraphicsSettings()
 
                 if(Width > 0 && Height > 0)//if the Atoi string conversion fails one of them will be 0 
                 {
-                    Settings->SetScreenResolution(FIntPoint(Width, Height));
+                    GetSettings()->SetScreenResolution(FIntPoint(Width, Height));
                 }
             }
         }
@@ -318,17 +289,13 @@ void UMenu::SaveGraphicsSettings()
             int32 WindowMode = FullScreenModeSelect->GetSelectedIndex();
             EWindowMode::Type FullScreenMode = EWindowMode::ConvertIntToWindowMode(WindowMode);
 
-            Settings->SetFullscreenMode(FullScreenMode);
+            GetSettings()->SetFullscreenMode(FullScreenMode);
         }
 
-        Settings->ApplySettings(false);
+        GetSettings()->ApplySettings(false);
     }
 }
 
-/**
- * Called when the host button is clicked.
- * Prints a debug message to the log and creates a session using the MultiplayerSessionsSubsystem.
- */
 void UMenu::HostButtonClicked()
 {
     HostButton->SetIsEnabled(false);
@@ -346,10 +313,6 @@ void UMenu::HostButtonClicked()
     }
 }
 
-/**
- * Called when the join button is clicked.
- * It checks if the MultiplayerSessionsSubsystem is valid and calls the FindSessions function with a timeout of 10000 milliseconds.
- */
 void UMenu::JoinButtonClicked()
 {
     // JoinButton->SetIsEnabled(false);
@@ -385,10 +348,6 @@ void UMenu::JoinCanceled()
     JoinText->SetText(FText::FromString("Search"));
 }
 
-/**
- * Tears down the menu by removing it from the parent widget and resetting the input mode.
- * This function is called when the menu is being closed.
- */
 void UMenu::MenuTearDown()
 {
     RemoveFromParent();
@@ -408,10 +367,6 @@ void UMenu::MenuTearDown()
     }
 }
 
-/**
- * Called when the menu is being destroyed.
- * Performs any necessary cleanup before the menu is destroyed.
- */
 void UMenu::NativeDestruct()
 {
 	MenuTearDown();
@@ -419,11 +374,6 @@ void UMenu::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-/**
- * Callback function called when a session creation attempt is completed.
- *
- * @param bWasSuccessful - Indicates whether the session creation was successful or not.
- */
 void UMenu::OnCreateSession(bool bWasSuccessful)
 {
     if(bWasSuccessful)
@@ -441,12 +391,6 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
     }
 }
 
-/**
- * Callback function called when finding sessions is completed.
- *
- * @param SessionResults The array of session search results.
- * @param bWasSuccessful Indicates whether the session search was successful or not.
- */
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult> & SessionResults, bool bWasSuccessful)
 {
     if(MultiplayerSessionsSubsystem == nullptr) return;
@@ -567,21 +511,11 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
     bIsJoining = false;
 }
 
-/**
- * Callback function called when a session is destroyed.
- *
- * @param bWasSuccessful - Indicates whether the session destruction was successful or not.
- */
 void UMenu::OnDestroySession(bool bWasSuccessful)
 {
     bWasSuccessful ? DebugHelper::PrintToLog("Session Destroyed Successfully", FColor::Green) : DebugHelper::PrintToLog("Session Destroy Failed", FColor::Red);
 }
 
-/**
- * Called when the session starts.
- *
- * @param bWasSuccessful - Indicates whether the session start was successful or not.
- */
 void UMenu::OnStartSession(bool bWasSuccessful)
 {
     bWasSuccessful ? DebugHelper::PrintToLog("Session Started Successfully", FColor::Green) : DebugHelper::PrintToLog("Session Start Failed", FColor::Red);
