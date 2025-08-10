@@ -56,6 +56,12 @@ public:
 	 * Destroy session via name NAME_GameSession, and broadcast the destroy event
 	 */
 	void DestroySession();
+	/**
+	 * Starts an online session.
+	 * If the session interface is not valid, an error message is printed and the function returns.
+	 * Adds a delegate for the start session complete event.
+	 * If starting the session fails, an error message is printed, the delegate is cleared, and a broadcast is sent indicating that the session was not started successfully.
+	 */
 	void StartSession();
 
 	/**
@@ -73,10 +79,33 @@ public:
 protected:
 	// Internal callbacks for the delegates added to the Online Session Interface delegate list
 	// This will be called inside the MultiplayerSessionsSubsystem.cpp file
+	/**
+	 * Callback function called when the session creation is complete.
+	 *
+	 * @param SessionName The name of the session that was created.
+	 * @param bWasSuccessful Indicates whether the session creation was successful or not.
+	 */
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	/**
+	 * Callback function called when finding sessions is complete.
+	 *
+	 * @param bWasSuccessful - Indicates whether the session search was successful or not.
+	 */
 	void OnFindSessionsComplete(bool bWasSuccessful);
+	/**
+	 * Callback function called when the join session operation is complete.
+	 *
+	 * @param SessionName The name of the session that was joined.
+	 * @param Result The result of the join session operation.
+	 */
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
+	/**
+	 * Callback function called when starting a session is complete.
+	 *
+	 * @param SessionName The name of the session that was started.
+	 * @param bWasSuccessful True if the session was started successfully, false otherwise. 
+	 */
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
 
 private:

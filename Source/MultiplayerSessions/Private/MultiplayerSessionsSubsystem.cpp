@@ -42,6 +42,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
         LastNumPublicConnections = NumPublicConnections;
         LastMatchType = MatchType;
         DestroySession();
+        return;
     }
 
     LastSessionSettings = MakeShareable(new FOnlineSessionSettings());//create a new session settings object
@@ -140,12 +141,6 @@ void UMultiplayerSessionsSubsystem::DestroySession()
     }
 }
 
-/**
- * Starts an online session.
- * If the session interface is not valid, an error message is printed and the function returns.
- * Adds a delegate for the start session complete event.
- * If starting the session fails, an error message is printed, the delegate is cleared, and a broadcast is sent indicating that the session was not started successfully.
- */
 void UMultiplayerSessionsSubsystem::StartSession()
 {
     if(!GetSessionInterface().IsValid())
@@ -154,7 +149,7 @@ void UMultiplayerSessionsSubsystem::StartSession()
 
         return;
     };
-
+    
     StartSessionCompleteDelegateHandle = SessionInterface->AddOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegate);//add the start session complete delegate
     
     if(!SessionInterface->StartSession(NAME_GameSession))//start the session
@@ -167,13 +162,6 @@ void UMultiplayerSessionsSubsystem::StartSession()
     }
 }
 
-
-/**
- * Callback function called when the session creation is complete.
- *
- * @param SessionName The name of the session that was created.
- * @param bWasSuccessful Indicates whether the session creation was successful or not.
- */
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
 	if(bWasSuccessful)//if the session was created successfully
@@ -195,11 +183,6 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 	}
 }
 
-/**
- * Callback function called when finding sessions is complete.
- *
- * @param bWasSuccessful - Indicates whether the session search was successful or not.
- */
 void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 {
     if(GetSessionInterface())
@@ -217,6 +200,8 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 
             TArray<FOnlineSessionSearchResult> SessionResults = LastSessionSearch->SearchResults;//get the search results -> SearchResults is a TArray of FOnlineSessionSearchResult
 
+            DebugHelper::PrintToLog(FString::Printf(TEXT("Find sessions complete!")), FColor::Green);
+            
             MultiplayerOnFindSessionsComplete.Broadcast(SessionResults, true);//broadcast that the session was found successfully
         }
         else
@@ -226,25 +211,21 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
     }
 }
 
-/**
- * Callback function called when the join session operation is complete.
- *
- * @param SessionName The name of the session that was joined.
- * @param Result The result of the join session operation.
- */
 void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-    if(GetSessionInterface())
+    if(SessionInterface.IsValid() && JoinSessionCompleteDelegateHandle.IsValid())
     {
         SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);//clear the delegate since we are done with it
     }
+
+    DebugHelper::PrintToLog(FString::Printf(TEXT("Join session complete!")), FColor::Green);
     
     MultiplayerOnJoinSessionComplete.Broadcast(Result);//broadcast that the session was joined successfully
 }
 
 void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    if(GetSessionInterface())
+    if(SessionInterface.IsValid() && DestroySessionCompleteDelegateHandle.IsValid())
     {
         SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);//clear the delegate
     }
@@ -259,18 +240,14 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 
 }
 
-/**
- * Callback function called when starting a session is complete.
- *
- * @param SessionName The name of the session that was started.
- * @param bWasSuccessful True if the session was started successfully, false otherwise.
- */
 void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    if(GetSessionInterface())
+    if(SessionInterface.IsValid() && StartSessionCompleteDelegateHandle.IsValid())
     {
         SessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);//clear the delegate
     }
+
+    DebugHelper::PrintToLog(FString::Printf(TEXT("On Start session complete!")), FColor::Green);
 
     MultiplayerOnStartSessionComplete.Broadcast(bWasSuccessful);//broadcast that the session was started successfully
 }

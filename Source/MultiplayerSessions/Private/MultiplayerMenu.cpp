@@ -265,6 +265,7 @@ void UMultiplayerMenu::SetupMultiplayerSubsystem()
 
 	if(MultiplayerSessionsSubsystem)//bind the custom delegates to the functions
 	{
+		DebugHelper::PrintToLog("SetupMultiplayerSubsystem", FColor::Green);
 		MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &UMultiplayerMenu::OnCreateSession);//moze i &ThisClass
 		MultiplayerSessionsSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &UMultiplayerMenu::OnFindSessions);
 		MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &UMultiplayerMenu::OnJoinSession);
